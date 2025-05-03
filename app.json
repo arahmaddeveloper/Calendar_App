@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "myexpoapp",
-    "slug": "myexpoapp",
+    "name": "Assistant",
+    "slug": "Assistant",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -15,7 +15,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.arahmadraza.Assistant"
     },
     "web": {
       "bundler": "metro",
@@ -36,6 +37,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "3234c3d6-cd23-412b-a2b1-2a8d5694b5d4"
+      }
     }
   }
 }
