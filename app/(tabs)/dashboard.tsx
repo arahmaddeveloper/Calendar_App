@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo, } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   Platform,
   TouchableWithoutFeedback,
@@ -70,6 +70,7 @@ const DashboardScreen: React.FC = () => {
   const [isDateTimePickerOpen, setIsDateTimePickerOpen] = useState(false);
   const insets = useSafeAreaInsets();
   const searchInputRef = React.useRef<TextInput | null>(null);
+  const [isDateView, setIsDateView] = useState<boolean>(true);
   const [isAddEventModalVisible, setIsAddEventModalVisible] = useState(false);
   const [newEventCategory, setNewEventCategory] = useState<string>('Personal');
 
@@ -80,13 +81,26 @@ const DashboardScreen: React.FC = () => {
   dates.toLocaleString("default", { month: "long" });
   const getYear = (date: Date) => date.getFullYear();
 
+  const today = new Date();
   const updateDates = (date: Date) => {
     const daysInMonth = new Date(
       date.getFullYear(),
       date.getMonth() + 1,
       0
     ).getDate();
-    const datesArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+    const datesArray = Array.from({ length: daysInMonth }, (_, i) => {
+      const day = i + 1;
+      const dayDate = new Date(date.getFullYear(), date.getMonth(), day);
+
+      const isToday =
+        dayDate.getDate() === today.getDate() &&
+        dayDate.getMonth() === today.getMonth() &&
+        dayDate.getFullYear() === today.getFullYear();
+
+      return { day, isToday };
+    }).map((item) => item.day);
+
+
     setDates(datesArray);
   };
 
@@ -197,19 +211,24 @@ const DashboardScreen: React.FC = () => {
     if (selectedTime) {
       setNewEventDate(selectedTime);
       setShowTimePicker(false);
-    }};
-  const renderItem = ({ item }: { item: number }) => (
-    <TouchableOpacity onPress={() => handleDatePress(item)}>
-      <View style={styles.card}>
-        <NativeText style={styles.dateText}>{item}</NativeText>
+    }
+  };
+  const renderItem = ({ item }: { item: { day: number, isToday: boolean } }) => (
+    <TouchableOpacity onPress={() => handleDatePress(item.day)}>
+      <View style={[styles.card, item.isToday && styles.today]}>
+        <NativeText style={[styles.dateText, item.isToday && styles.todayText]}>
+          {item.day}
+        </NativeText>
       </View>
     </TouchableOpacity>
   );
+  
 
   const handleHourPress = (hour: number, day: number, index: number) => {
     setSelectedHour(hour);
     setEventToEdit({ day, hour: hour, eventIndex: index });
     setIsModalVisible(true);
+    setIsDateView(false);
   };
   const [newEventTitle, setNewEventTitle] = useState<string>("");
 
@@ -404,7 +423,17 @@ const DashboardScreen: React.FC = () => {
     if (selectedDate === null) return null;
     const events = getEventsForDate(selectedDate);
 
-
+    if (!isDateView) {
+      return (
+        <View style={styles.goBackContainer}>
+          <Button
+            title="Go Back"
+            onPress={() => setIsDateView(true)}
+          />
+        </View>
+      );
+    }
+    
     return (
       <View>
         {Array.from({ length: 24 }, (_, i) => i).map((hour, index) => (
@@ -450,7 +479,7 @@ const DashboardScreen: React.FC = () => {
             <Button
               title={`Date: ${newEventDate.toLocaleDateString()}`}
               onPress={() => setShowDatePicker(true)}
-              
+
             />
 
             {showDatePicker && (
@@ -470,21 +499,23 @@ const DashboardScreen: React.FC = () => {
             />
             {showTimePicker && (
               <DateTimePicker
-                value={new Date(newEventDate)}
+                testID="timePicker"
+
+                value={newEventDate}
                 mode="time"
                 is24Hour={true}
                 onChange={onTimeChange} />
             )}
-            {/* <Picker selectedValue={newEventCategory} onValueChange={setNewEventCategory}> 
-                    <Picker.Item label="Personal" value="Personal" />
-                    <Picker.Item label="Work" value="Work" />
-                  </Picker> */}
-            {eventToEdit && eventToEdit.eventIndex !== -1 ? (
-              <>
+
+            <View>
+
+              {eventToEdit && eventToEdit.eventIndex !== -1 ? (
+
                 <Button title="Save Changes" onPress={handleEditEvent} />
-                <Button title="Delete Event" onPress={handleDeleteEvent} />
-              </>
-            ) : <Button title="Add Event" onPress={handleAddEvent} />}
+
+              ) : <Button title="Add Event" onPress={handleAddEvent} />}<Button title="Delete Event" onPress={handleDeleteEvent} />
+            </View>
+
             <Button title="Cancel" onPress={handleCancelModal} />
 
 
@@ -492,7 +523,7 @@ const DashboardScreen: React.FC = () => {
         </Modal>
       </View>
     );
-  }, [selectedDate, currentDate, events, newEventTitle, newEventDescription, selectedHour]);
+  }, [selectedDate, currentDate, events, newEventTitle, newEventDescription, selectedHour, isDateView]);
 
   return (
 
@@ -525,15 +556,19 @@ const DashboardScreen: React.FC = () => {
             size={20}
           />
           <TextInput
-          ref={searchInputRef} style={styles.searchInput} placeholder="Search Events" value={searchTerm} onChangeText={setSearchTerm} />
+            ref={searchInputRef} style={styles.searchInput} placeholder="Search Events" value={searchTerm} onChangeText={setSearchTerm} />
         </View>
       </View><FlatList
-        data={dates}
-        renderItem={renderItem} keyExtractor={(item) => item.toString()}
+  data={dates.map(day => ({
+    day,
+    isToday: day === new Date().getDate() // or however you want to determine "today"
+  }))}
+  renderItem={renderItem}
+  keyExtractor={(item) => item.day.toString()}
+  numColumns={7}
+  contentContainerStyle={styles.gridContainer}
+/>
 
-        numColumns={7}
-        contentContainerStyle={styles.gridContainer}
-      />
       <Modal
         visible={isAddEventModalVisible}
         animationType="slide">
@@ -553,7 +588,7 @@ const DashboardScreen: React.FC = () => {
           <Button
             title={`Date: ${newEventDate.toLocaleDateString()}`}
             onPress={() => setShowDatePicker(true)}
-          />
+          /></View>
 
           {showDatePicker && (
             <DateTimePicker
@@ -571,21 +606,23 @@ const DashboardScreen: React.FC = () => {
             onPress={() => setShowTimePicker(true)}
           />
           {showTimePicker && (
-            <>
-              <DateTimePicker
-                value={newEventDate}
-                mode="time"
-                is24Hour={true}
-                onChange={onTimeChange} />
-              <Button title="Add Event" onPress={handleAddEvent} />
-              <Button
-                title="Cancel"
-                onPress={() => {
-                  setIsAddEventModalVisible(false);
-                }}
-              /></>)}
 
-        </View>
+            <DateTimePicker
+              testID="timePicker"
+              value={newEventDate}
+              mode="time"
+              is24Hour={true}
+              onChange={onTimeChange} />
+          )}<View>
+            <Button title="Add Event" onPress={handleAddEvent} /></View>
+          <Button
+            title="Cancel"
+            onPress={() => {
+              setIsAddEventModalVisible(false);
+            }}
+          />
+
+
 
       </Modal>
       <FloatingAction
@@ -609,6 +646,12 @@ export default DashboardScreen;
 const cardDimension = (width - 20) / 7;
 const hourContainerHeight = 25;
 const styles = StyleSheet.create({
+  goBackContainer: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: 'center'
+  },
 
   container: {
     flex: 1,
@@ -638,6 +681,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "lightgray",
     borderRadius: 5,
+  },
+  today: {
+    backgroundColor: "#007BFF",
+  },
+  todayText: {
+    color: 'white',
+    fontWeight: 'bold'
   },
   dateText: {
     fontSize: 16,
