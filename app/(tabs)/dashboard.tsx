@@ -1,6 +1,8 @@
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, } from "react";
 import {
+  Platform,
+  TouchableWithoutFeedback,
   View,
   StyleSheet,
   Dimensions,
@@ -10,12 +12,17 @@ import {
   Modal,
   TextInput,
 } from 'react-native';
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { FloatingAction } from "react-native-floating-action";
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, Button, Icon } from "react-native-elements";
 const { width } = Dimensions.get("window");
+
+
 
 interface Event {
   hour: number;
@@ -35,11 +42,14 @@ interface IEventGroup {
   events: Event[];
 }
 
-interface EventToEdit {
-  day: number;
-  eventIndex: number;
-}
 
+const actions = [
+  {
+    text: "Add event",
+    icon: require("../../assets/images/icon.png"),
+    name: "bt_accessibility",
+    position: 1,
+  }];
 const STORAGE_KEY = "@events";
 
 const DashboardScreen: React.FC = () => {
@@ -53,14 +63,20 @@ const DashboardScreen: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [newEvents, setNewEvents] = useState<IEventGroup[]>([]); // Changed type here
 
+  const [newEventDate, setNewEventDate] = useState<Date>(new Date());
+  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+  const [showTimePicker, setShowTimePicker] = useState<boolean>(false);
+
+  const [isDateTimePickerOpen, setIsDateTimePickerOpen] = useState(false);
   const insets = useSafeAreaInsets();
+  const searchInputRef = React.useRef<TextInput | null>(null);
+  const [isAddEventModalVisible, setIsAddEventModalVisible] = useState(false);
   const [newEventCategory, setNewEventCategory] = useState<string>('Personal');
 
   const getMonthName = (date: Date) =>
     date.toLocaleString("default", { month: "long" });
 
 
-  const searchInputRef = useRef<TextInput>(null);
   dates.toLocaleString("default", { month: "long" });
   const getYear = (date: Date) => date.getFullYear();
 
@@ -165,14 +181,14 @@ const DashboardScreen: React.FC = () => {
   };
 
   const getEventsForDate = (day: number): Event[] => {
-    const eventGroup = events.find((group) => group.day === day);
-    return eventGroup ? eventGroup.events : [];
+    if (day === null) return [];
+    return events.find((group) => group.day === day)?.events || [];
   };
 
   const [eventToEdit, setEventToEdit] = useState<EventToEdit | null>(null);
 
 
-  const handleDatePress = (day: number) => {
+  const handleDatePress = (day: number): void => {
     setSelectedDate(day);
   };
 
@@ -190,6 +206,15 @@ const DashboardScreen: React.FC = () => {
     setIsModalVisible(true);
   };
   const [newEventTitle, setNewEventTitle] = useState<string>("");
+
+  const onDateChange = (_event: any, selectedDate: any) => {
+
+    setNewEventDate(selectedDate || newEventDate);
+    setShowDatePicker(false);
+  };
+  const handleOpenAddModal = () => {
+    setIsAddEventModalVisible(true)
+  }
   const [newEventDescription, setNewEventDescription] = useState<string>("");
 
 
@@ -200,18 +225,21 @@ const DashboardScreen: React.FC = () => {
 
 
   const handleAddEvent = () => {
-    if (selectedDate !== null && selectedHour !== null) {
+    const selectedDay = new Date(newEventDate).getDate();
+    const selectedHour = new Date(newEventDate).getHours();
+
+    if (selectedDay !== null && selectedHour !== null) {
       const newEvent = {
         hour: selectedHour,
-        title: newEventTitle,
+        title: newEventTitle || "New Event",
         description: newEventDescription,
         category: newEventCategory
       };
 
 
-      setEvents((prevEvents) => {
+      setEvents((prevEvents: any) => {
         const eventGroupIndex = prevEvents.findIndex(
-          (group) => group.day === selectedDate
+          (group: any) => group.day === selectedDay
         );
 
         if (eventGroupIndex !== -1) {
@@ -221,20 +249,27 @@ const DashboardScreen: React.FC = () => {
         } else {
           return [
             ...prevEvents,
-            { day: selectedDate, events: [newEvent] },
+            { day: selectedDay, events: [newEvent] },
           ];
         }
       });
-
+      setIsAddEventModalVisible(false)
       setIsModalVisible(false);
+
+      setNewEventDate(new Date())
       setNewEventTitle("");
       setNewEventDescription("");
       setNewEventCategory('Personal')
-      const month = currentDate.getMonth();
-      const year = currentDate.getFullYear();
-      scheduleNotification(newEvent, selectedDate, month, year)
+      setSelectedDate(null);
+
+      const month = new Date(newEventDate).getMonth();
+      const year = new Date(newEventDate).getFullYear();
+      if (selectedDate !== null) {
+        scheduleNotification(newEvent, selectedDate, month, year);
+      }
 
     }
+
 
   };
 
@@ -313,7 +348,7 @@ const DashboardScreen: React.FC = () => {
       if (events.length > 0 && eventIndex >= 0) {
         const event = events[eventIndex];
         setNewEventTitle(event.title || "");
-        setNewEventCategory(event.category || "Personal");
+        setNewEventCategory(event.category || 'Personal');
         setNewEventDescription(event.description || "");
       }
     } else {
@@ -359,28 +394,37 @@ const DashboardScreen: React.FC = () => {
 
 
   const renderHoursAndEvents = useMemo(() => {
-    if (!selectedDate) return null;
+    if (selectedDate === null) return null;
+    if (selectedDate === null) return null;
     const events = getEventsForDate(selectedDate);
+
+
     return (
       <View>
         {Array.from({ length: 24 }, (_, i) => i).map((hour, index) => (
           <TouchableOpacity key={hour} onPress={() => {
             const eventIndex = events.findIndex(event => event.hour === hour);
             handleHourPress(hour, selectedDate, eventIndex)
-          }}>
+          }}
+          >
+
             <View style={styles.hourContainer}>
               <Text style={styles.hourText}>{hour}:00</Text>
-              {events
-                .filter((event) => event.hour === hour)
-                .map((event, idx) => (
-                  <View key={idx} style={{
-                    backgroundColor: getEventColor(event.category),
-                    padding: 5,
-                    borderRadius: 5,
-                    marginBottom: 5,
-                  }}><Text>{`${event.title}: ${event.description}`}</Text></View>
-                ))}
+              <View>
+                {events
+                  .filter((event) => event.hour === hour)
+                  .map((event, idx) => (
+                    <View key={idx} style={{
+                      backgroundColor: getEventColor(event.category),
+                      padding: 5,
+                      borderRadius: 5,
+                      marginBottom: 5,
+                    }}><Text>{`${event.title}: ${event.description}`}</Text></View>
+                  ))}
+              </View>
             </View>
+
+
           </TouchableOpacity>
         ))}
         <Modal visible={isModalVisible} animationType="slide">
@@ -397,21 +441,43 @@ const DashboardScreen: React.FC = () => {
               onChangeText={setNewEventDescription}
               style={styles.input}
             />
-            <Text>Category:</Text>
-            <TextInput
-              style={styles.input}
-              value={newEventCategory}
-              onChangeText={setNewEventCategory}
+            <Button
+              title={`Date: ${newEventDate.toLocaleDateString()}`}
+              onPress={() => setShowDatePicker(true)}
+              
             />
-            {/* <Picker selectedValue={newEventCategory} onValueChange={setNewEventCategory}>
+
+            {showDatePicker && (
+              <DateTimePicker
+                testID="datePicker"
+                value={new Date(newEventDate)}
+                mode="date"
+                is24Hour={true}
+                display="default"
+                onChange={onDateChange}
+              />
+            )}
+
+            <Button
+              title={`Time: ${newEventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+              onPress={() => setShowTimePicker(true)}
+            />
+            {showTimePicker && (
+              <DateTimePicker
+                value={new Date(newEventDate)}
+                mode="time"
+                is24Hour={true}
+                onChange={onDateChange} />
+            )}
+            {/* <Picker selectedValue={newEventCategory} onValueChange={setNewEventCategory}> 
                     <Picker.Item label="Personal" value="Personal" />
                     <Picker.Item label="Work" value="Work" />
                   </Picker> */}
             {eventToEdit && eventToEdit.eventIndex !== -1 ? (
-              <View>
+              <>
                 <Button title="Save Changes" onPress={handleEditEvent} />
                 <Button title="Delete Event" onPress={handleDeleteEvent} />
-              </View>
+              </>
             ) : <Button title="Add Event" onPress={handleAddEvent} />}
             <Button title="Cancel" onPress={handleCancelModal} />
 
@@ -423,6 +489,7 @@ const DashboardScreen: React.FC = () => {
   }, [selectedDate, currentDate, events, newEventTitle, newEventDescription, selectedHour]);
 
   return (
+
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top, }]}>
         <TouchableOpacity onPress={handlePrevMonth} style={[styles.monthButton, { backgroundColor: '#0056b3' }]}>
@@ -432,34 +499,103 @@ const DashboardScreen: React.FC = () => {
             color="#FFF"
             size={20}
           />
-         </TouchableOpacity>
+        </TouchableOpacity>
         <Text h4 style={styles.monthTitle}>{`${getMonthName(currentDate)} ${getYear(currentDate)}`}</Text>
 
+
         <View style={styles.searchBarContainer}>
-        <TouchableOpacity onPress={handleNextMonth} style={[styles.monthButton, { backgroundColor: '#0056b3' }]} >
+          <TouchableOpacity onPress={handleNextMonth} style={[styles.monthButton, { backgroundColor: '#0056b3' }]} >
+            <Icon
+              name="chevron-right"
+              type="font-awesome"
+              color="#FFF"
+              size={20}
+            />
+          </TouchableOpacity>
           <Icon
-            name="chevron-right"
-            type="font-awesome"
-            color="#FFF"
-            size={20}
-          />
-        </TouchableOpacity>
-             <Icon
             name='search'
-            type='font-awesome'
-            color='#000'
+            type='Feather'
+            color='#FFF'
             size={20}
           />
           <TextInput
-            ref={searchInputRef} style={styles.searchInput} placeholder="Search Events" value={searchTerm} onChangeText={setSearchTerm} />
+          ref={searchInputRef} style={styles.searchInput} placeholder="Search Events" value={searchTerm} onChangeText={setSearchTerm} />
         </View>
-        </View><FlatList
-        data={dates} renderItem={renderItem} keyExtractor={(item) => item.toString()}
+      </View><FlatList
+        data={dates}
+        renderItem={renderItem} keyExtractor={(item) => item.toString()}
+
         numColumns={7}
         contentContainerStyle={styles.gridContainer}
       />
+      <Modal
+        visible={isAddEventModalVisible}
+        animationType="slide">
+        <View style={styles.modalContainer}>
+          <Text>Event Title:</Text>
+          <TextInput
+            value={newEventTitle}
+            onChangeText={setNewEventTitle}
+            style={styles.input}
+          />
+          <Text>Event Description:</Text>
+          <TextInput
+            value={newEventDescription}
+            onChangeText={setNewEventDescription}
+            style={styles.input}
+          />
+          <Button
+            title={`Date: ${newEventDate.toLocaleDateString()}`}
+            onPress={() => setShowDatePicker(true)}
+          />
+
+          {showDatePicker && (
+            <DateTimePicker
+              testID="datePicker"
+              value={new Date(newEventDate)}
+              mode="date"
+              is24Hour={true}
+              display="default"
+              onChange={onDateChange}
+            />
+          )}
+
+          <Button
+            title={`Time: ${newEventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+            onPress={() => setShowTimePicker(true)}
+          />
+          {showTimePicker && (
+            <>
+              <DateTimePicker
+                value={newEventDate}
+                mode="time"
+                is24Hour={true}
+                onChange={onDateChange} />
+              <Button title="Add Event" onPress={handleAddEvent} />
+              <Button
+                title="Cancel"
+                onPress={() => {
+                  setIsAddEventModalVisible(false);
+                }}
+              /></>)}
+
+        </View>
+
+      </Modal>
+      <FloatingAction
+        actions={actions}
+        onPressItem={name => {
+          if (name === "bt_accessibility") {
+            handleOpenAddModal();
+            setSelectedDate(null)
+
+          }
+        }}
+      />
       {renderHoursAndEvents}
+
     </View>
+
   );
 };
 export default DashboardScreen;
@@ -467,20 +603,21 @@ export default DashboardScreen;
 const cardDimension = (width - 20) / 7;
 const hourContainerHeight = 25;
 const styles = StyleSheet.create({
+
   container: {
     flex: 1,
     alignItems: "center",
     padding: 5,
   },
-      header: {
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    justifyContent: 'space-between', 
-    width: '100%', 
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
     paddingHorizontal: 10,
     backgroundColor: "#007BFF",
   },
-    monthTitle: {
+  monthTitle: {
     fontWeight: "bold",
   },
   gridContainer: {
@@ -516,7 +653,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 10
   },
   searchIcon: {
-    marginRight: 10,
+    marginRight: 10
   },
   searchInput: {
     flex: 1,
@@ -526,6 +663,7 @@ const styles = StyleSheet.create({
     width: '100%'
   },
   hourContainer: {
+
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-start",
@@ -537,6 +675,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   modalContainer: {
+
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -549,7 +688,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginVertical: 10,
   },
-    monthButton: {
+  monthButton: {
     padding: 10,
     borderRadius: 5,
     alignItems: "center",
