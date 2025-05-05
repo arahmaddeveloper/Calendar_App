@@ -188,10 +188,16 @@ const DashboardScreen: React.FC = () => {
   const [eventToEdit, setEventToEdit] = useState<EventToEdit | null>(null);
 
 
-  const handleDatePress = (day: number): void => {
+  const handleDatePress = (day: number) => {
     setSelectedDate(day);
   };
 
+
+  const onTimeChange = (_event: any, selectedTime: Date | undefined) => {
+    if (selectedTime) {
+      setNewEventDate(selectedTime);
+      setShowTimePicker(false);
+    }};
   const renderItem = ({ item }: { item: number }) => (
     <TouchableOpacity onPress={() => handleDatePress(item)}>
       <View style={styles.card}>
@@ -210,7 +216,7 @@ const DashboardScreen: React.FC = () => {
   const onDateChange = (_event: any, selectedDate: any) => {
 
     setNewEventDate(selectedDate || newEventDate);
-    setShowDatePicker(false);
+    setShowDatePicker(false)
   };
   const handleOpenAddModal = () => {
     setIsAddEventModalVisible(true)
@@ -467,7 +473,7 @@ const DashboardScreen: React.FC = () => {
                 value={new Date(newEventDate)}
                 mode="time"
                 is24Hour={true}
-                onChange={onDateChange} />
+                onChange={onTimeChange} />
             )}
             {/* <Picker selectedValue={newEventCategory} onValueChange={setNewEventCategory}> 
                     <Picker.Item label="Personal" value="Personal" />
@@ -570,7 +576,7 @@ const DashboardScreen: React.FC = () => {
                 value={newEventDate}
                 mode="time"
                 is24Hour={true}
-                onChange={onDateChange} />
+                onChange={onTimeChange} />
               <Button title="Add Event" onPress={handleAddEvent} />
               <Button
                 title="Cancel"
