@@ -17,11 +17,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-<<<<<<< HEAD
       "package": "com.arahmadraza.Assistant"
-=======
-      "package": "com.anonymous.myexpoapp"
->>>>>>> be3fc66 (add event button)
     },
     "web": {
       "bundler": "metro",
