@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useMemo, } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Platform,
   TouchableWithoutFeedback,
@@ -11,18 +10,16 @@ import {
   TouchableOpacity,
   Modal,
   TextInput,
-} from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+} from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { FloatingAction } from "react-native-floating-action";
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Notifications from 'expo-notifications';
-import { Alert } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Notifications from "expo-notifications";
+import { Alert } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, Button, Icon } from "react-native-elements";
 const { width } = Dimensions.get("window");
-
-
 
 interface Event {
   hour: number;
@@ -42,14 +39,14 @@ interface IEventGroup {
   events: Event[];
 }
 
-
 const actions = [
   {
     text: "Add event",
     icon: require("../../assets/images/icon.png"),
     name: "bt_accessibility",
     position: 1,
-  }];
+  },
+];
 const STORAGE_KEY = "@events";
 
 const DashboardScreen: React.FC = () => {
@@ -58,7 +55,7 @@ const DashboardScreen: React.FC = () => {
   const [dates, setDates] = useState<number[]>([]);
   const [selectedDate, setSelectedDate] = useState<number | null>(null);
   const [selectedHour, setSelectedHour] = useState<number | null>(null);
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [filteredEvents, setFilteredEvents] = useState<IEventGroup[]>([]);
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [newEvents, setNewEvents] = useState<IEventGroup[]>([]); // Changed type here
@@ -71,11 +68,10 @@ const DashboardScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const searchInputRef = React.useRef<TextInput | null>(null);
   const [isAddEventModalVisible, setIsAddEventModalVisible] = useState(false);
-  const [newEventCategory, setNewEventCategory] = useState<string>('Personal');
+  const [newEventCategory, setNewEventCategory] = useState<string>("Personal");
 
   const getMonthName = (date: Date) =>
     date.toLocaleString("default", { month: "long" });
-
 
   dates.toLocaleString("default", { month: "long" });
   const getYear = (date: Date) => date.getFullYear();
@@ -92,18 +88,26 @@ const DashboardScreen: React.FC = () => {
 
   const requestNotificationPermission = async () => {
     const { status } = await Notifications.getPermissionsAsync();
-    if (status !== 'granted') {
-      const { status: newStatus } = await Notifications.requestPermissionsAsync();
-      if (newStatus !== 'granted') {
-
-        Alert.alert('Permission Error', 'Notifications permission is required to use reminders.');
+    if (status !== "granted") {
+      const { status: newStatus } =
+        await Notifications.requestPermissionsAsync();
+      if (newStatus !== "granted") {
+        Alert.alert(
+          "Permission Error",
+          "Notifications permission is required to use reminders."
+        );
         return false;
       }
     }
     return true;
   };
 
-  const scheduleNotification = async (event: Event, day: number, month: number, year: number) => {
+  const scheduleNotification = async (
+    event: Event,
+    day: number,
+    month: number,
+    year: number
+  ) => {
     try {
       const permissionGranted = await requestNotificationPermission();
       if (!permissionGranted) {
@@ -119,9 +123,11 @@ const DashboardScreen: React.FC = () => {
         },
         trigger: trigger.getTime() - Date.now() > 0 ? { date: trigger } : null,
       } as any);
-      console.log(`Notification scheduled for event: ${event.title} with id: ${notificationId}`);
+      console.log(
+        `Notification scheduled for event: ${event.title} with id: ${notificationId}`
+      );
     } catch (error) {
-      console.error('Error scheduling notification:', error);
+      console.error("Error scheduling notification:", error);
     }
   };
   useEffect(() => {
@@ -187,11 +193,9 @@ const DashboardScreen: React.FC = () => {
 
   const [eventToEdit, setEventToEdit] = useState<EventToEdit | null>(null);
 
-
   const handleDatePress = (day: number) => {
     setSelectedDate(day);
   };
-
 
   const onTimeChange = (_event: any, selectedTime: Date | undefined) => {
     if (selectedTime) {
@@ -215,21 +219,18 @@ const DashboardScreen: React.FC = () => {
   const [newEventTitle, setNewEventTitle] = useState<string>("");
 
   const onDateChange = (_event: any, selectedDate: any) => {
-
     setNewEventDate(selectedDate || newEventDate);
-    setShowDatePicker(false)
+    setShowDatePicker(false);
   };
   const handleOpenAddModal = () => {
-    setIsAddEventModalVisible(true)
-  }
+    setIsAddEventModalVisible(true);
+  };
   const [newEventDescription, setNewEventDescription] = useState<string>("");
-
 
   const handleCancelModal = () => {
     setIsModalVisible(false);
-    setSelectedHour(null)
+    setSelectedHour(null);
   };
-
 
   const handleAddEvent = () => {
     const selectedDay = new Date(newEventDate).getDate();
@@ -240,9 +241,8 @@ const DashboardScreen: React.FC = () => {
         hour: selectedHour,
         title: newEventTitle || "New Event",
         description: newEventDescription,
-        category: newEventCategory
+        category: newEventCategory,
       };
-
 
       setEvents((prevEvents: any) => {
         const eventGroupIndex = prevEvents.findIndex(
@@ -254,19 +254,16 @@ const DashboardScreen: React.FC = () => {
           updatedEvents[eventGroupIndex].events.push(newEvent);
           return updatedEvents;
         } else {
-          return [
-            ...prevEvents,
-            { day: selectedDay, events: [newEvent] },
-          ];
+          return [...prevEvents, { day: selectedDay, events: [newEvent] }];
         }
       });
-      setIsAddEventModalVisible(false)
+      setIsAddEventModalVisible(false);
       setIsModalVisible(false);
 
-      setNewEventDate(new Date())
+      setNewEventDate(new Date());
       setNewEventTitle("");
       setNewEventDescription("");
-      setNewEventCategory('Personal')
+      setNewEventCategory("Personal");
       setSelectedDate(null);
 
       const month = new Date(newEventDate).getMonth();
@@ -274,10 +271,7 @@ const DashboardScreen: React.FC = () => {
       if (selectedDate !== null) {
         scheduleNotification(newEvent, selectedDate, month, year);
       }
-
     }
-
-
   };
 
   const handleEditEvent = () => {
@@ -289,7 +283,8 @@ const DashboardScreen: React.FC = () => {
         );
         if (eventGroupIndex !== -1) {
           const updatedEvents = [...prevEvents];
-          const eventToUpdate = updatedEvents[eventGroupIndex].events[eventIndex];
+          const eventToUpdate =
+            updatedEvents[eventGroupIndex].events[eventIndex];
           if (eventToUpdate) {
             eventToUpdate.title = newEventTitle;
             eventToUpdate.description = newEventDescription;
@@ -303,11 +298,10 @@ const DashboardScreen: React.FC = () => {
         }
       });
 
-
       setIsModalVisible(false);
       setNewEventTitle("");
       setNewEventDescription("");
-      setNewEventCategory('Personal')
+      setNewEventCategory("Personal");
     }
   };
 
@@ -326,15 +320,16 @@ const DashboardScreen: React.FC = () => {
                 if (eventToEdit) {
                   const { day, eventIndex } = eventToEdit;
                   const updatedEvents = [...prevEvents];
-                  const eventGroupIndex = updatedEvents.findIndex((group) => group.day === day);
+                  const eventGroupIndex = updatedEvents.findIndex(
+                    (group) => group.day === day
+                  );
                   if (eventGroupIndex !== -1 && eventIndex > -1) {
                     updatedEvents[eventGroupIndex].events.splice(eventIndex, 1);
                     if (updatedEvents[eventGroupIndex].events.length === 0) {
-                      updatedEvents.splice(eventGroupIndex, 1)
+                      updatedEvents.splice(eventGroupIndex, 1);
                     }
                     return updatedEvents;
                   }
-
                 }
                 return prevEvents;
               });
@@ -343,9 +338,8 @@ const DashboardScreen: React.FC = () => {
             },
           },
         ]
-      )
+      );
     }
-
   };
 
   useEffect(() => {
@@ -355,7 +349,7 @@ const DashboardScreen: React.FC = () => {
       if (events.length > 0 && eventIndex >= 0) {
         const event = events[eventIndex];
         setNewEventTitle(event.title || "");
-        setNewEventCategory(event.category || 'Personal');
+        setNewEventCategory(event.category || "Personal");
         setNewEventDescription(event.description || "");
       }
     } else {
@@ -375,12 +369,14 @@ const DashboardScreen: React.FC = () => {
     categoryColors[category] || "lightgray";
 
   useEffect(() => {
-    const filtered = events.map((group) => ({
-      ...group,
-      events: group.events.filter((event) =>
-        event.title.toLowerCase().includes(searchTerm.toLowerCase())
-      ),
-    })).filter(group => group.events.length > 0);
+    const filtered = events
+      .map((group) => ({
+        ...group,
+        events: group.events.filter((event) =>
+          event.title.toLowerCase().includes(searchTerm.toLowerCase())
+        ),
+      }))
+      .filter((group) => group.events.length > 0);
 
     setFilteredEvents(filtered);
   }, [searchTerm, events]);
@@ -399,51 +395,62 @@ const DashboardScreen: React.FC = () => {
     }
   };
 
-
   const renderHoursAndEvents = useMemo(() => {
     if (selectedDate === null) return null;
     if (selectedDate === null) return null;
     const events = getEventsForDate(selectedDate);
 
-
     return (
       <View>
         {Array.from({ length: 24 }, (_, i) => i).map((hour, index) => (
-          <TouchableOpacity key={hour} onPress={() => {
-            const eventIndex = events.findIndex(event => event.hour === hour);
-            handleHourPress(hour, selectedDate, eventIndex)
-          }}
+          <TouchableOpacity
+            key={hour}
+            onPress={() => {
+              const eventIndex = events.findIndex(
+                (event) => event.hour === hour
+              );
+              handleHourPress(hour, selectedDate, eventIndex);
+            }}
           >
-
             <View style={styles.hourContainer}>
               <Text style={styles.hourText}>{hour}:00</Text>
               <View>
                 {events
                   .filter((event) => event.hour === hour)
                   .map((event, idx) => (
-                    <View key={idx} style={{
-                      backgroundColor: getEventColor(event.category),
-                      padding: 5,
-                      borderRadius: 5,
-                      marginBottom: 5,
-                    }}><Text>{`${event.title}: ${event.description}`}</Text></View>
+                    <View
+                      key={idx}
+                      style={{
+                        backgroundColor: getEventColor(event.category),
+                        padding: 5,
+                        height: 30,
+                        borderRadius: 5,
+                        marginBottom: 5,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: "blue",
+                        }}
+                      >{`${event.title}: ${event.description}`}</Text>
+                    </View>
                   ))}
               </View>
             </View>
-
-
           </TouchableOpacity>
         ))}
         <Modal visible={isModalVisible} animationType="slide">
           <View style={styles.modalContainer}>
             <Text>Event Title:</Text>
             <TextInput
+              placeholder="Enter Event name"
               value={newEventTitle}
               onChangeText={setNewEventTitle}
               style={styles.input}
             />
             <Text>Event Description:</Text>
             <TextInput
+              placeholder="Enter Event Description"
               value={newEventDescription}
               onChangeText={setNewEventDescription}
               style={styles.input}
@@ -451,7 +458,6 @@ const DashboardScreen: React.FC = () => {
             <Button
               title={`Date: ${newEventDate.toLocaleDateString()}`}
               onPress={() => setShowDatePicker(true)}
-
             />
 
             {showDatePicker && (
@@ -466,42 +472,52 @@ const DashboardScreen: React.FC = () => {
             )}
 
             <Button
-              title={`Time: ${newEventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+              title={`Time: ${newEventDate.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}`}
               onPress={() => setShowTimePicker(true)}
             />
             {showTimePicker && (
               <DateTimePicker
                 testID="timePicker"
-
                 value={newEventDate}
                 mode="time"
                 is24Hour={true}
-                onChange={onTimeChange} />
+                onChange={onTimeChange}
+              />
             )}
 
             <View>
-
               {eventToEdit && eventToEdit.eventIndex !== -1 ? (
-
                 <Button title="Save Changes" onPress={handleEditEvent} />
-
-              ) : <Button title="Add Event" onPress={handleAddEvent} />}<Button title="Delete Event" onPress={handleDeleteEvent} />
+              ) : (
+                <Button title="Add Event" onPress={handleAddEvent} />
+              )}
+              <Button title="Delete Event" onPress={handleDeleteEvent} />
             </View>
 
             <Button title="Cancel" onPress={handleCancelModal} />
-
-
           </View>
         </Modal>
       </View>
     );
-  }, [selectedDate, currentDate, events, newEventTitle, newEventDescription, selectedHour]);
+  }, [
+    selectedDate,
+    currentDate,
+    events,
+    newEventTitle,
+    newEventDescription,
+    selectedHour,
+  ]);
 
   return (
-
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top, }]}>
-        <TouchableOpacity onPress={handlePrevMonth} style={[styles.monthButton, { backgroundColor: '#0056b3' }]}>
+      <View style={[styles.header, { paddingTop: insets.top }]}>
+        <TouchableOpacity
+          onPress={handlePrevMonth}
+          style={[styles.monthButton, { backgroundColor: "#0056b3" }]}
+        >
           <Icon
             name="chevron-left"
             type="font-awesome"
@@ -509,11 +525,15 @@ const DashboardScreen: React.FC = () => {
             size={20}
           />
         </TouchableOpacity>
-        <Text h4 style={styles.monthTitle}>{`${getMonthName(currentDate)} ${getYear(currentDate)}`}</Text>
-
+        <Text h4 style={styles.monthTitle}>{`${getMonthName(
+          currentDate
+        )} ${getYear(currentDate)}`}</Text>
 
         <View style={styles.searchBarContainer}>
-          <TouchableOpacity onPress={handleNextMonth} style={[styles.monthButton, { backgroundColor: '#0056b3' }]} >
+          <TouchableOpacity
+            onPress={handleNextMonth}
+            style={[styles.monthButton, { backgroundColor: "#0056b3" }]}
+          >
             <Icon
               name="chevron-right"
               type="font-awesome"
@@ -521,34 +541,35 @@ const DashboardScreen: React.FC = () => {
               size={20}
             />
           </TouchableOpacity>
-          <Icon
-            name='search'
-            type='Feather'
-            color='#FFF'
-            size={20}
-          />
+          <Icon name="search" type="Feather" color="#FFF" size={20} />
           <TextInput
-            ref={searchInputRef} style={styles.searchInput} placeholder="Search Events" value={searchTerm} onChangeText={setSearchTerm} />
+            ref={searchInputRef}
+            style={styles.searchInput}
+            placeholder="Search Events"
+            value={searchTerm}
+            onChangeText={setSearchTerm}
+          />
         </View>
-      </View><FlatList
+      </View>
+      <FlatList
         data={dates}
-        renderItem={renderItem} keyExtractor={(item) => item.toString()}
-
+        renderItem={renderItem}
+        keyExtractor={(item) => item.toString()}
         numColumns={7}
         contentContainerStyle={styles.gridContainer}
       />
-      <Modal
-        visible={isAddEventModalVisible}
-        animationType="slide">
+      <Modal visible={isAddEventModalVisible} animationType="slide">
         <View style={styles.modalContainer}>
           <Text>Event Title:</Text>
           <TextInput
+            placeholder="Enter Event name"
             value={newEventTitle}
             onChangeText={setNewEventTitle}
             style={styles.input}
           />
           <Text>Event Description:</Text>
           <TextInput
+            placeholder="Enter Event Description"
             value={newEventDescription}
             onChangeText={setNewEventDescription}
             style={styles.input}
@@ -556,57 +577,57 @@ const DashboardScreen: React.FC = () => {
           <Button
             title={`Date: ${newEventDate.toLocaleDateString()}`}
             onPress={() => setShowDatePicker(true)}
-          /></View>
-
-          {showDatePicker && (
-            <DateTimePicker
-              testID="datePicker"
-              value={new Date(newEventDate)}
-              mode="date"
-              is24Hour={true}
-              display="default"
-              onChange={onDateChange}
-            />
-          )}
-
-          <Button
-            title={`Time: ${newEventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
-            onPress={() => setShowTimePicker(true)}
           />
-          {showTimePicker && (
+        </View>
 
-            <DateTimePicker
-              testID="timePicker"
-              value={newEventDate}
-              mode="time"
-              is24Hour={true}
-              onChange={onTimeChange} />
-          )}<View>
-            <Button title="Add Event" onPress={handleAddEvent} /></View>
-          <Button
-            title="Cancel"
-            onPress={() => {
-              setIsAddEventModalVisible(false);
-            }}
+        {showDatePicker && (
+          <DateTimePicker
+            testID="datePicker"
+            value={new Date(newEventDate)}
+            mode="date"
+            is24Hour={true}
+            display="default"
+            onChange={onDateChange}
           />
+        )}
 
-
-
+        <Button
+          title={`Time: ${newEventDate.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}`}
+          onPress={() => setShowTimePicker(true)}
+        />
+        {showTimePicker && (
+          <DateTimePicker
+            testID="timePicker"
+            value={newEventDate}
+            mode="time"
+            is24Hour={true}
+            onChange={onTimeChange}
+          />
+        )}
+        <View>
+          <Button title="Add Event" onPress={handleAddEvent} />
+        </View>
+        <Button
+          title="Cancel"
+          onPress={() => {
+            setIsAddEventModalVisible(false);
+          }}
+        />
       </Modal>
       <FloatingAction
         actions={actions}
-        onPressItem={name => {
+        onPressItem={(name) => {
           if (name === "bt_accessibility") {
             handleOpenAddModal();
-            setSelectedDate(null)
-
+            setSelectedDate(null);
           }
         }}
       />
       {renderHoursAndEvents}
-
     </View>
-
   );
 };
 export default DashboardScreen;
@@ -614,17 +635,16 @@ export default DashboardScreen;
 const cardDimension = (width - 20) / 7;
 const hourContainerHeight = 25;
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
     alignItems: "center",
     padding: 5,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
     paddingHorizontal: 10,
     backgroundColor: "#007BFF",
   },
@@ -651,30 +671,28 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
 
-
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     width: 300,
     height: 40,
     borderColor: "gray",
     borderWidth: 1,
     marginBottom: 10,
     paddingHorizontal: 10,
-    marginHorizontal: 10
+    marginHorizontal: 10,
   },
   searchIcon: {
-    marginRight: 10
+    marginRight: 10,
   },
   searchInput: {
     flex: 1,
     height: 40,
 
     paddingHorizontal: 10,
-    width: '100%'
+    width: "100%",
   },
   hourContainer: {
-
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-start",
@@ -686,7 +704,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   modalContainer: {
-
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -706,7 +723,4 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginHorizontal: 5,
   },
-
 });
-
-
