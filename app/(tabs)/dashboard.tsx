@@ -65,7 +65,6 @@ const DashboardScreen: React.FC = () => {
   const [newEventDate, setNewEventDate] = useState<Date>(new Date());
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
   const [showTimePicker, setShowTimePicker] = useState<boolean>(false);
-
   const [isDateTimePickerOpen, setIsDateTimePickerOpen] = useState(false);
   const insets = useSafeAreaInsets();
   const searchInputRef = React.useRef<TextInput | null>(null);
@@ -720,7 +719,6 @@ const DashboardScreen: React.FC = () => {
         </View>
       </View>
 
-   
       <FlatList
         data={dates}
         renderItem={renderItem}
