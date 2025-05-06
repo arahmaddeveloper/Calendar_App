@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   Modal,
   TextInput,
+  ScrollView,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { FloatingAction } from "react-native-floating-action";
@@ -69,6 +70,7 @@ const DashboardScreen: React.FC = () => {
   const searchInputRef = React.useRef<TextInput | null>(null);
   const [isAddEventModalVisible, setIsAddEventModalVisible] = useState(false);
   const [newEventCategory, setNewEventCategory] = useState<string>("Personal");
+  const [error, setError] = useState("");
 
   const getMonthName = (date: Date) =>
     date.toLocaleString("default", { month: "long" });
@@ -232,14 +234,65 @@ const DashboardScreen: React.FC = () => {
     setSelectedHour(null);
   };
 
+  // const handleAddEvent = () => {
+  //   const selectedDay = new Date(newEventDate).getDate();
+  //   const selectedHour = new Date(newEventDate).getHours();
+
+  //   if (selectedDay !== null && selectedHour !== null) {
+  //     const newEvent = {
+  //       hour: selectedHour,
+  //       title: newEventTitle || "New Event",
+  //       description: newEventDescription,
+  //       category: newEventCategory,
+  //     };
+
+  //     setEvents((prevEvents: any) => {
+  //       const eventGroupIndex = prevEvents.findIndex(
+  //         (group: any) => group.day === selectedDay
+  //       );
+
+  //       if (eventGroupIndex !== -1) {
+  //         const updatedEvents = [...prevEvents];
+  //         updatedEvents[eventGroupIndex].events.push(newEvent);
+  //         return updatedEvents;
+  //       } else {
+  //         return [...prevEvents, { day: selectedDay, events: [newEvent] }];
+  //       }
+  //     });
+  //     setIsAddEventModalVisible(false);
+  //     setIsModalVisible(false);
+
+  //     setNewEventDate(new Date());
+  //     setNewEventTitle("");
+  //     setNewEventDescription("");
+  //     setNewEventCategory("Personal");
+  //     setSelectedDate(null);
+
+  //     const month = new Date(newEventDate).getMonth();
+  //     const year = new Date(newEventDate).getFullYear();
+  //     if (selectedDate !== null) {
+  //       scheduleNotification(newEvent, selectedDate, month, year);
+  //     }
+  //   }
+  // };
+
   const handleAddEvent = () => {
+    if (
+      !newEventTitle.trim() ||
+      !newEventDescription.trim() ||
+      !newEventCategory.trim()
+    ) {
+      Alert.alert("Missing Fields", "Please fill in all required fields.");
+      return;
+    }
+
     const selectedDay = new Date(newEventDate).getDate();
     const selectedHour = new Date(newEventDate).getHours();
 
     if (selectedDay !== null && selectedHour !== null) {
       const newEvent = {
         hour: selectedHour,
-        title: newEventTitle || "New Event",
+        title: newEventTitle,
         description: newEventDescription,
         category: newEventCategory,
       };
@@ -257,6 +310,7 @@ const DashboardScreen: React.FC = () => {
           return [...prevEvents, { day: selectedDay, events: [newEvent] }];
         }
       });
+
       setIsAddEventModalVisible(false);
       setIsModalVisible(false);
 
@@ -394,6 +448,11 @@ const DashboardScreen: React.FC = () => {
       return []; // No events match the filter
     }
   };
+  const formatHour12 = (hour: number): string => {
+    const period = hour >= 12 ? "PM" : "AM";
+    const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+    return `${hour12}:00 ${period}`;
+  };
 
   const renderHoursAndEvents = useMemo(() => {
     if (selectedDate === null) return null;
@@ -402,7 +461,7 @@ const DashboardScreen: React.FC = () => {
 
     return (
       <View>
-        {Array.from({ length: 24 }, (_, i) => i).map((hour, index) => (
+        {/* {Array.from({ length: 24 }, (_, i) => i).map((hour, index) => (
           <TouchableOpacity
             key={hour}
             onPress={() => {
@@ -438,7 +497,49 @@ const DashboardScreen: React.FC = () => {
               </View>
             </View>
           </TouchableOpacity>
-        ))}
+        ))} */}
+        <ScrollView contentContainerStyle={styles.scheduleScroll}>
+          {Array.from({ length: 24 }, (_, i) => i).map((hour) => {
+            const eventsAtHour = events.filter((event) => event.hour === hour);
+            const hasEvents = eventsAtHour.length > 0;
+
+            return (
+              <TouchableOpacity
+                key={hour}
+                onPress={() => {
+                  const eventIndex = events.findIndex(
+                    (event) => event.hour === hour
+                  );
+                  handleHourPress(hour, selectedDate, eventIndex);
+                }}
+                style={styles.hourBlockWrapper}
+              >
+                <View
+                  style={[styles.hourRow, hasEvents && styles.hourRowActive]}
+                >
+                  <Text style={styles.hourLabel}>{formatHour12(hour)}</Text>
+
+                  <View style={styles.eventsContainer}>
+                    {eventsAtHour.map((event, idx) => (
+                      <View
+                        key={idx}
+                        style={[
+                          styles.eventCard,
+                          { backgroundColor: getEventColor(event.category) },
+                        ]}
+                      >
+                        <Text style={styles.eventText}>
+                          {event.title}: {event.description}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
         <Modal visible={isModalVisible} animationType="slide">
           <View style={styles.modalContainer}>
             <Text>Event Title:</Text>
@@ -448,6 +549,7 @@ const DashboardScreen: React.FC = () => {
               onChangeText={setNewEventTitle}
               style={styles.input}
             />
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
             <Text>Event Description:</Text>
             <TextInput
               placeholder="Enter Event Description"
@@ -455,6 +557,7 @@ const DashboardScreen: React.FC = () => {
               onChangeText={setNewEventDescription}
               style={styles.input}
             />
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
             <Button
               title={`Date: ${newEventDate.toLocaleDateString()}`}
               onPress={() => setShowDatePicker(true)}
@@ -513,7 +616,7 @@ const DashboardScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top }]}>
+      {/* <View style={[styles.header, { paddingTop: insets.top }]}>
         <TouchableOpacity
           onPress={handlePrevMonth}
           style={[styles.monthButton, { backgroundColor: "#0056b3" }]}
@@ -548,9 +651,58 @@ const DashboardScreen: React.FC = () => {
             placeholder="Search Events"
             value={searchTerm}
             onChangeText={setSearchTerm}
+          />{error ? <Text style={styles.errorText}>{error}</Text> : null}
+        </View>
+      </View> */}
+      <View style={[styles.calendarHeaderWrapper, { paddingTop: insets.top }]}>
+        {/* Left Navigation */}
+        <TouchableOpacity
+          onPress={handlePrevMonth}
+          style={[styles.navButton, styles.navButtonLeft]}
+        >
+          <Icon
+            name="chevron-left"
+            type="font-awesome"
+            color="#FFF"
+            size={20}
           />
+        </TouchableOpacity>
+
+        {/* Current Month Display */}
+        <Text h4 style={styles.currentMonthText}>
+          {`${getMonthName(currentDate)} ${getYear(currentDate)}`}
+        </Text>
+
+        {/* Right Navigation + Search */}
+        <View style={styles.headerRightGroup}>
+          <TouchableOpacity
+            onPress={handleNextMonth}
+            style={[styles.navButton, styles.navButtonRight]}
+          >
+            <Icon
+              name="chevron-right"
+              type="font-awesome"
+              color="#FFF"
+              size={20}
+            />
+          </TouchableOpacity>
+
+          <View style={styles.searchWrapper}>
+            <Icon name="search" type="feather" color="#666" size={18} />
+            <TextInput
+              ref={searchInputRef}
+              style={styles.searchInput}
+              placeholder="Search Events"
+              placeholderTextColor="#999"
+              value={searchTerm}
+              onChangeText={setSearchTerm}
+            />
+          </View>
+
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
         </View>
       </View>
+
       <FlatList
         data={dates}
         renderItem={renderItem}
@@ -567,6 +719,7 @@ const DashboardScreen: React.FC = () => {
             onChangeText={setNewEventTitle}
             style={styles.input}
           />
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
           <Text>Event Description:</Text>
           <TextInput
             placeholder="Enter Event Description"
@@ -574,6 +727,7 @@ const DashboardScreen: React.FC = () => {
             onChangeText={setNewEventDescription}
             style={styles.input}
           />
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
           <Button
             title={`Date: ${newEventDate.toLocaleDateString()}`}
             onPress={() => setShowDatePicker(true)}
@@ -685,13 +839,13 @@ const styles = StyleSheet.create({
   searchIcon: {
     marginRight: 10,
   },
-  searchInput: {
-    flex: 1,
-    height: 40,
+  // searchInput: {
+  //   flex: 1,
+  //   height: 40,
 
-    paddingHorizontal: 10,
-    width: "100%",
-  },
+  //   paddingHorizontal: 10,
+  //   width: "100%",
+  // },
   hourContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -722,5 +876,120 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginHorizontal: 5,
+  },
+  inputError: {
+    borderColor: "red",
+  },
+  // errorText: {
+  //   color: 'red',
+  //   marginBottom: 10,
+  // },
+  calendarHeaderWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    backgroundColor: "#f8f9fa",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+  },
+  navButton: {
+    padding: 10,
+    borderRadius: 50,
+    backgroundColor: "#0056b3",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  navButtonLeft: {
+    marginRight: 8,
+  },
+  navButtonRight: {
+    marginLeft: 8,
+  },
+  currentMonthText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+    flex: 1,
+    textAlign: "center",
+  },
+  headerRightGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  searchWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#e9ecef",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+  searchInput: {
+    marginLeft: 6,
+    padding: 0,
+    height: 20,
+    fontSize: 14,
+    color: "#333",
+    minWidth: 100,
+  },
+  errorText: {
+    color: "black",
+    fontSize: 12,
+    marginLeft: 8,
+  },
+  hourBlockWrapper: {
+    width: "100%",
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+  },
+  hourRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+    paddingBottom: 8,
+    gap: 12,
+    minHeight: 60, // 👈 fixed consistent height
+  },
+  hourRowActive: {
+    backgroundColor: "#f1f9ff",
+    borderLeftWidth: 4,
+    borderLeftColor: "#007bff",
+    borderRadius: 8,
+  },
+  hourLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    width: 60,
+  },
+  eventsContainer: {
+    flex: 1,
+    maxHeight: 50, // 👈 prevent overflow
+    overflow: "hidden",
+  },
+  eventCard: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    marginBottom: 4,
+  },
+  eventText: {
+    fontSize: 12,
+    color: "#fff",
+    flexShrink: 1,
+    flexWrap: "wrap",
+  },
+  scheduleScroll: {
+    paddingBottom: 20,
+    paddingTop: 10,
   },
 });
