@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Platform,
-  TouchableWithoutFeedback,
   View,
   StyleSheet,
   Dimensions,
@@ -11,6 +10,7 @@ import {
   Modal,
   TextInput,
   ScrollView,
+  Animated,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { FloatingAction } from "react-native-floating-action";
@@ -72,6 +72,11 @@ const DashboardScreen: React.FC = () => {
   const [isAddEventModalVisible, setIsAddEventModalVisible] = useState(false);
   const [newEventCategory, setNewEventCategory] = useState<string>("Personal");
   const [error, setError] = useState("");
+  const [ampm, setAMPM] = useState("AM");
+
+  const toggleAMPM = (value: any) => {
+    setAMPM(value);
+  };
 
   const getMonthName = (date: Date) =>
     date.toLocaleString("default", { month: "long" });
@@ -201,10 +206,29 @@ const DashboardScreen: React.FC = () => {
   };
 
   const onTimeChange = (_event: any, selectedTime: Date | undefined) => {
-    if (selectedTime) {
-      setNewEventDate(selectedTime);
+    if (_event.type === "dismissed") {
       setShowTimePicker(false);
+      return;
     }
+
+    if (selectedTime) {
+      const updated = new Date(newEventDate);
+      let hours = selectedTime.getHours();
+      const minutes = selectedTime.getMinutes();
+
+      // Adjust hours based on AM/PM toggle
+      if (ampm === "PM" && hours < 12) {
+        hours += 12;
+      } else if (ampm === "AM" && hours === 12) {
+        hours = 0;
+      }
+
+      updated.setHours(hours);
+      updated.setMinutes(minutes);
+      setNewEventDate(updated);
+    }
+
+    setShowTimePicker(false);
   };
   const renderItem = ({ item }: { item: number }) => (
     <TouchableOpacity onPress={() => handleDatePress(item)}>
@@ -222,8 +246,16 @@ const DashboardScreen: React.FC = () => {
   const [newEventTitle, setNewEventTitle] = useState<string>("");
 
   const onDateChange = (_event: any, selectedDate: any) => {
-    setNewEventDate(selectedDate || newEventDate);
     setShowDatePicker(false);
+    if (selectedDate) {
+      setNewEventDate((prev) => {
+        const updated = new Date(prev);
+        updated.setFullYear(selectedDate.getFullYear());
+        updated.setMonth(selectedDate.getMonth());
+        updated.setDate(selectedDate.getDate());
+        return updated;
+      });
+    }
   };
   const handleOpenAddModal = () => {
     setIsAddEventModalVisible(true);
@@ -234,48 +266,6 @@ const DashboardScreen: React.FC = () => {
     setIsModalVisible(false);
     setSelectedHour(null);
   };
-
-  // const handleAddEvent = () => {
-  //   const selectedDay = new Date(newEventDate).getDate();
-  //   const selectedHour = new Date(newEventDate).getHours();
-
-  //   if (selectedDay !== null && selectedHour !== null) {
-  //     const newEvent = {
-  //       hour: selectedHour,
-  //       title: newEventTitle || "New Event",
-  //       description: newEventDescription,
-  //       category: newEventCategory,
-  //     };
-
-  //     setEvents((prevEvents: any) => {
-  //       const eventGroupIndex = prevEvents.findIndex(
-  //         (group: any) => group.day === selectedDay
-  //       );
-
-  //       if (eventGroupIndex !== -1) {
-  //         const updatedEvents = [...prevEvents];
-  //         updatedEvents[eventGroupIndex].events.push(newEvent);
-  //         return updatedEvents;
-  //       } else {
-  //         return [...prevEvents, { day: selectedDay, events: [newEvent] }];
-  //       }
-  //     });
-  //     setIsAddEventModalVisible(false);
-  //     setIsModalVisible(false);
-
-  //     setNewEventDate(new Date());
-  //     setNewEventTitle("");
-  //     setNewEventDescription("");
-  //     setNewEventCategory("Personal");
-  //     setSelectedDate(null);
-
-  //     const month = new Date(newEventDate).getMonth();
-  //     const year = new Date(newEventDate).getFullYear();
-  //     if (selectedDate !== null) {
-  //       scheduleNotification(newEvent, selectedDate, month, year);
-  //     }
-  //   }
-  // };
 
   const handleAddEvent = () => {
     if (
@@ -462,43 +452,6 @@ const DashboardScreen: React.FC = () => {
 
     return (
       <View>
-        {/* {Array.from({ length: 24 }, (_, i) => i).map((hour, index) => (
-          <TouchableOpacity
-            key={hour}
-            onPress={() => {
-              const eventIndex = events.findIndex(
-                (event) => event.hour === hour
-              );
-              handleHourPress(hour, selectedDate, eventIndex);
-            }}
-          >
-            <View style={styles.hourContainer}>
-              <Text style={styles.hourText}>{hour}:00</Text>
-              <View>
-                {events
-                  .filter((event) => event.hour === hour)
-                  .map((event, idx) => (
-                    <View
-                      key={idx}
-                      style={{
-                        backgroundColor: getEventColor(event.category),
-                        padding: 5,
-                        height: 30,
-                        borderRadius: 5,
-                        marginBottom: 5,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color: "blue",
-                        }}
-                      >{`${event.title}: ${event.description}`}</Text>
-                    </View>
-                  ))}
-              </View>
-            </View>
-          </TouchableOpacity>
-        ))} */}
         <ScrollView contentContainerStyle={styles.scheduleScroll}>
           {Array.from({ length: 24 }, (_, i) => i).map((hour) => {
             const eventsAtHour = events.filter((event) => event.hour === hour);
@@ -541,67 +494,130 @@ const DashboardScreen: React.FC = () => {
           })}
         </ScrollView>
 
-        <Modal visible={isModalVisible} animationType="slide">
-          <View style={styles.modalContainer}>
-            <Text>Event Title:</Text>
-            <TextInput
-              placeholder="Enter Event name"
-              value={newEventTitle}
-              onChangeText={setNewEventTitle}
-              style={styles.input}
-            />
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-            <Text>Event Description:</Text>
-            <TextInput
-              placeholder="Enter Event Description"
-              value={newEventDescription}
-              onChangeText={setNewEventDescription}
-              style={styles.input}
-            />
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-            <Button
-              title={`Date: ${newEventDate.toLocaleDateString()}`}
-              onPress={() => setShowDatePicker(true)}
-            />
-
-            {showDatePicker && (
-              <DateTimePicker
-                testID="datePicker"
-                value={new Date(newEventDate)}
-                mode="date"
-                is24Hour={true}
-                display="default"
-                onChange={onDateChange}
+        <Modal
+          visible={isModalVisible}
+          animationType="slide"
+          transparent
+          onRequestClose={handleCancelModal}
+        >
+          <View style={styles.modalBackdrop}>
+            <Animated.View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>🎯 Event Title</Text>
+              <TextInput
+                placeholder="Enter Event name"
+                value={newEventTitle}
+                onChangeText={setNewEventTitle}
+                style={styles.input}
               />
-            )}
+              {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-            <Button
-              title={`Time: ${newEventDate.toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}`}
-              onPress={() => setShowTimePicker(true)}
-            />
-            {showTimePicker && (
-              <DateTimePicker
-                testID="timePicker"
-                value={newEventDate}
-                mode="time"
-                is24Hour={true}
-                onChange={onTimeChange}
+              <Text style={styles.modalTitle}>📝 Description</Text>
+              <TextInput
+                placeholder="Enter Event Description"
+                value={newEventDescription}
+                onChangeText={setNewEventDescription}
+                style={styles.input}
               />
-            )}
+              {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-            <View>
-              {eventToEdit && eventToEdit.eventIndex !== -1 ? (
-                <Button title="Save Changes" onPress={handleEditEvent} />
-              ) : (
-                <Button title="Add Event" onPress={handleAddEvent} />
+              <TouchableOpacity
+                onPress={() => setShowDatePicker(true)}
+                style={styles.dateButton}
+              >
+                <Text style={styles.dateButtonText}>
+                  📅 {newEventDate.toLocaleDateString()}
+                </Text>
+              </TouchableOpacity>
+
+              {showDatePicker && (
+                <DateTimePicker
+                  testID="timePicker"
+                  value={newEventDate}
+                  mode="time"
+                  is24Hour={false} // Force 12-hour format
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={onTimeChange}
+                />
               )}
-              <Button title="Delete Event" onPress={handleDeleteEvent} />
-            </View>
 
-            <Button title="Cancel" onPress={handleCancelModal} />
+              <TouchableOpacity
+                onPress={() => setShowTimePicker(true)}
+                style={styles.dateButton}
+              >
+                <Text style={styles.dateButtonText}>
+                  ⏰{" "}
+                  {newEventDate.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </Text>
+              </TouchableOpacity>
+
+              {showTimePicker && (
+                <>
+                  <DateTimePicker
+                    testID="timePicker"
+                    value={newEventDate}
+                    mode="time"
+                    is24Hour={false}
+                    display={Platform.OS === "ios" ? "spinner" : "default"}
+                    onChange={onTimeChange}
+                  />
+                  <View style={styles.ampmToggle}>
+                    <TouchableOpacity onPress={() => toggleAMPM("AM")}>
+                      <Text
+                        style={
+                          ampm === "AM" ? styles.selected : styles.unselected
+                        }
+                      >
+                        AM
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => toggleAMPM("PM")}>
+                      <Text
+                        style={
+                          ampm === "PM" ? styles.selected : styles.unselected
+                        }
+                      >
+                        PM
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
+
+              <View style={styles.buttonRow}>
+                {eventToEdit && eventToEdit.eventIndex !== -1 ? (
+                  <TouchableOpacity
+                    onPress={handleEditEvent}
+                    style={styles.saveButton}
+                  >
+                    <Text style={styles.buttonText}>💾 Save</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    onPress={handleAddEvent}
+                    style={styles.addButton}
+                  >
+                    <Text style={styles.buttonText}>➕ Add</Text>
+                  </TouchableOpacity>
+                )}
+
+                <TouchableOpacity
+                  onPress={handleDeleteEvent}
+                  style={styles.deleteButton}
+                >
+                  <Text style={styles.buttonText}>🗑 Delete</Text>
+                </TouchableOpacity>
+              </View>
+
+              <TouchableOpacity
+                onPress={handleCancelModal}
+                style={styles.cancelButton}
+              >
+                <Text style={styles.cancelButtonText}>❌ Cancel</Text>
+              </TouchableOpacity>
+            </Animated.View>
           </View>
         </Modal>
       </View>
@@ -704,82 +720,115 @@ const DashboardScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* <FlatList
+   
+      <FlatList
         data={dates}
         renderItem={renderItem}
         keyExtractor={(item) => item.toString()}
         numColumns={7}
         contentContainerStyle={styles.gridContainer}
-      /> */}
-      <FlatList
-  data={dates}
-  renderItem={renderItem}
-  keyExtractor={(item) => item.toString()}
-  numColumns={7}
-  contentContainerStyle={styles.gridContainer}
-  columnWrapperStyle={styles.row} // evenly space columns
-/>
-      <Modal visible={isAddEventModalVisible} animationType="slide">
-        <View style={styles.modalContainer}>
-          <Text>Event Title:</Text>
-          <TextInput
-            placeholder="Enter Event name"
-            value={newEventTitle}
-            onChangeText={setNewEventTitle}
-            style={styles.input}
-          />
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-          <Text>Event Description:</Text>
-          <TextInput
-            placeholder="Enter Event Description"
-            value={newEventDescription}
-            onChangeText={setNewEventDescription}
-            style={styles.input}
-          />
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-          <Button
-            title={`Date: ${newEventDate.toLocaleDateString()}`}
-            onPress={() => setShowDatePicker(true)}
-          />
-        </View>
+        columnWrapperStyle={styles.row} // evenly space columns
+      />
+      <Modal visible={isAddEventModalVisible} animationType="slide" transparent>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Event Title:</Text>
+            <TextInput
+              placeholder="Enter Event name"
+              value={newEventTitle}
+              onChangeText={setNewEventTitle}
+              style={styles.input}
+            />
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-        {showDatePicker && (
-          <DateTimePicker
-            testID="datePicker"
-            value={new Date(newEventDate)}
-            mode="date"
-            is24Hour={true}
-            display="default"
-            onChange={onDateChange}
-          />
-        )}
+            <Text style={styles.modalTitle}>Event Description:</Text>
+            <TextInput
+              placeholder="Enter Event Description"
+              value={newEventDescription}
+              onChangeText={setNewEventDescription}
+              style={styles.input}
+            />
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-        <Button
-          title={`Time: ${newEventDate.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}`}
-          onPress={() => setShowTimePicker(true)}
-        />
-        {showTimePicker && (
-          <DateTimePicker
-            testID="timePicker"
-            value={newEventDate}
-            mode="time"
-            is24Hour={true}
-            onChange={onTimeChange}
-          />
-        )}
-        <View>
-          <Button title="Add Event" onPress={handleAddEvent} />
+            <TouchableOpacity
+              onPress={() => setShowDatePicker(true)}
+              style={styles.dateButton}
+            >
+              <Text style={styles.dateButtonText}>
+                📅 Date: {newEventDate.toLocaleDateString()}
+              </Text>
+            </TouchableOpacity>
+
+            {showDatePicker && (
+              <DateTimePicker
+                value={new Date(newEventDate)}
+                mode="date"
+                is24Hour={true}
+                display="default"
+                onChange={onDateChange}
+              />
+            )}
+
+            <TouchableOpacity
+              onPress={() => setShowTimePicker(true)}
+              style={styles.dateButton}
+            >
+              <Text style={styles.dateButtonText}>
+                ⏰ Time:{" "}
+                {newEventDate.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </Text>
+            </TouchableOpacity>
+
+            {showTimePicker && (
+              <>
+                <DateTimePicker
+                  testID="timePicker"
+                  value={newEventDate}
+                  mode="time"
+                  is24Hour={false}
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={onTimeChange}
+                />
+                <View style={styles.ampmToggle}>
+                  <TouchableOpacity onPress={() => toggleAMPM("AM")}>
+                    <Text
+                      style={
+                        ampm === "AM" ? styles.selected : styles.unselected
+                      }
+                    >
+                      AM
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => toggleAMPM("PM")}>
+                    <Text
+                      style={
+                        ampm === "PM" ? styles.selected : styles.unselected
+                      }
+                    >
+                      PM
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+
+            <TouchableOpacity style={styles.addButton} onPress={handleAddEvent}>
+              <Text style={styles.addButtonText}>➕ Add Event</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setIsAddEventModalVisible(false)}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        <Button
-          title="Cancel"
-          onPress={() => {
-            setIsAddEventModalVisible(false);
-          }}
-        />
       </Modal>
+
       <FloatingAction
         actions={actions}
         onPressItem={(name) => {
@@ -814,9 +863,6 @@ const styles = StyleSheet.create({
   monthTitle: {
     fontWeight: "bold",
   },
-  // gridContainer: {
-  //   width: width - 20,
-  // },
   card: {
     width: cardDimension,
     height: cardDimension,
@@ -848,13 +894,6 @@ const styles = StyleSheet.create({
   searchIcon: {
     marginRight: 10,
   },
-  // searchInput: {
-  //   flex: 1,
-  //   height: 40,
-
-  //   paddingHorizontal: 10,
-  //   width: "100%",
-  // },
   hourContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -866,19 +905,6 @@ const styles = StyleSheet.create({
     marginRight: 20,
     fontWeight: "bold",
   },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  input: {
-    width: "100%",
-    borderWidth: 1,
-    borderColor: "gray",
-    padding: 10,
-    marginVertical: 10,
-  },
   monthButton: {
     padding: 10,
     borderRadius: 5,
@@ -889,10 +915,6 @@ const styles = StyleSheet.create({
   inputError: {
     borderColor: "red",
   },
-  // errorText: {
-  //   color: 'red',
-  //   marginBottom: 10,
-  // },
   calendarHeaderWrapper: {
     flexDirection: "row",
     alignItems: "center",
@@ -943,11 +965,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
     minWidth: 100,
-  },
-  errorText: {
-    color: "black",
-    fontSize: 12,
-    marginLeft: 8,
   },
   hourBlockWrapper: {
     width: "100%",
@@ -1004,7 +1021,7 @@ const styles = StyleSheet.create({
   gridContainer: {
     paddingVertical: 10,
     paddingHorizontal: 5,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   row: {
     marginBottom: 8,
@@ -1013,24 +1030,136 @@ const styles = StyleSheet.create({
     width: cellSize,
     height: cellSize,
     borderRadius: 12,
-    backgroundColor: '#f5f8ff',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#f5f8ff",
+    justifyContent: "center",
+    alignItems: "center",
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
   },
   dayText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
   },
   selectedDay: {
-    backgroundColor: '#007bff',
+    backgroundColor: "#007bff",
   },
   selectedDayText: {
-    color: '#fff',
+    color: "#fff",
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 20,
+    width: "90%",
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 4,
+    color: "#333",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 12,
+  },
+  errorText: {
+    color: "red",
+    marginBottom: 10,
+    fontSize: 13,
+  },
+  dateButton: {
+    backgroundColor: "#f0f0f0",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  dateButtonText: {
+    color: "#007AFF",
+    fontWeight: "600",
+  },
+  addButton: {
+    backgroundColor: "#28a745",
+    padding: 14,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  addButtonText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 15,
+  },
+
+  saveButton: {
+    backgroundColor: "#007bff",
+    padding: 12,
+    borderRadius: 10,
+    flex: 1,
+    marginRight: 5,
+  },
+  deleteButton: {
+    backgroundColor: "#dc3545",
+    padding: 12,
+    borderRadius: 10,
+    flex: 1,
+    marginLeft: 5,
+  },
+  buttonText: {
+    color: "#fff",
+    textAlign: "center",
+    fontWeight: "600",
+  },
+  cancelButton: {
+    padding: 12,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  cancelButtonText: {
+    color: "#555",
+    fontWeight: "500",
+  },
+  ampmToggle: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 10,
+    gap: 20,
+  },
+  selected: {
+    color: "white",
+    backgroundColor: "#007AFF",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 10,
+    fontWeight: "bold",
+  },
+  unselected: {
+    color: "#007AFF",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#007AFF",
   },
 });
