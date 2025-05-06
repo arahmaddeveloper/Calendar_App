@@ -21,6 +21,7 @@ import { Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, Button, Icon } from "react-native-elements";
 const { width } = Dimensions.get("window");
+const cellSize = width / 7 - 8;
 
 interface Event {
   hour: number;
@@ -703,13 +704,21 @@ const DashboardScreen: React.FC = () => {
         </View>
       </View>
 
-      <FlatList
+      {/* <FlatList
         data={dates}
         renderItem={renderItem}
         keyExtractor={(item) => item.toString()}
         numColumns={7}
         contentContainerStyle={styles.gridContainer}
-      />
+      /> */}
+      <FlatList
+  data={dates}
+  renderItem={renderItem}
+  keyExtractor={(item) => item.toString()}
+  numColumns={7}
+  contentContainerStyle={styles.gridContainer}
+  columnWrapperStyle={styles.row} // evenly space columns
+/>
       <Modal visible={isAddEventModalVisible} animationType="slide">
         <View style={styles.modalContainer}>
           <Text>Event Title:</Text>
@@ -805,9 +814,9 @@ const styles = StyleSheet.create({
   monthTitle: {
     fontWeight: "bold",
   },
-  gridContainer: {
-    width: width - 20,
-  },
+  // gridContainer: {
+  //   width: width - 20,
+  // },
   card: {
     width: cardDimension,
     height: cardDimension,
@@ -991,5 +1000,37 @@ const styles = StyleSheet.create({
   scheduleScroll: {
     paddingBottom: 20,
     paddingTop: 10,
+  },
+  gridContainer: {
+    paddingVertical: 10,
+    paddingHorizontal: 5,
+    backgroundColor: '#fff',
+  },
+  row: {
+    marginBottom: 8,
+  },
+  dayCell: {
+    width: cellSize,
+    height: cellSize,
+    borderRadius: 12,
+    backgroundColor: '#f5f8ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  dayText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  selectedDay: {
+    backgroundColor: '#007bff',
+  },
+  selectedDayText: {
+    color: '#fff',
   },
 });
