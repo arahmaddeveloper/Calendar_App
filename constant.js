@@ -1,4 +1,4 @@
- {/* <Modal visible={isAddEventModalVisible} animationType="slide">
+ /* <Modal visible={isAddEventModalVisible} animationType="slide">
         <View style={styles.modalContainer}>
           <Text>Event Title:</Text>
           <TextInput
@@ -58,14 +58,14 @@
             setIsAddEventModalVisible(false);
           }}
         />
-      </Modal> */}
+      </Modal> */
 
 
 
 
 
 
-       {/* <Modal visible={isModalVisible} animationType="slide">
+       /* <Modal visible={isModalVisible} animationType="slide">
           <View style={styles.modalContainer}>
             <Text>Event Title:</Text>
             <TextInput
@@ -127,10 +127,10 @@
 
             <Button title="Cancel" onPress={handleCancelModal} />
           </View>
-        </Modal> */}
+        </Modal> */
 
 
-         {/* {Array.from({ length: 24 }, (_, i) => i).map((hour, index) => (
+         /* {Array.from({ length: 24 }, (_, i) => i).map((hour, index) => (
           <TouchableOpacity
             key={hour}
             onPress={() => {
@@ -166,7 +166,7 @@
               </View>
             </View>
           </TouchableOpacity>
-        ))} */}
+        ))} */
 
          // const handleAddEvent = () => {
   //   const selectedDay = new Date(newEventDate).getDate();
@@ -210,10 +210,48 @@
   //   }
   // };
 
-     {/* <FlatList
+     /* <FlatList
         data={dates}
         renderItem={renderItem}
         keyExtractor={(item) => item.toString()}
         numColumns={7}
         contentContainerStyle={styles.gridContainer}
-      /> */}
+      /> */
+      /* <View style={[styles.header, { paddingTop: insets.top }]}>
+              <TouchableOpacity
+                onPress={handlePrevMonth}
+                style={[styles.monthButton, { backgroundColor: "#0056b3" }]}
+              >
+                <Icon
+                  name="chevron-left"
+                  type="font-awesome"
+                  color="#FFF"
+                  size={20}
+                />
+              </TouchableOpacity>
+              <Text h4 style={styles.monthTitle}>{`${getMonthName(
+                currentDate
+              )} ${getYear(currentDate)}`}</Text>
+      
+              <View style={styles.searchBarContainer}>
+                <TouchableOpacity
+                  onPress={handleNextMonth}
+                  style={[styles.monthButton, { backgroundColor: "#0056b3" }]}
+                >
+                  <Icon
+                    name="chevron-right"
+                    type="font-awesome"
+                    color="#FFF"
+                    size={20}
+                  />
+                </TouchableOpacity>
+                <Icon name="search" type="Feather" color="#FFF" size={20} />
+                <TextInput
+                  ref={searchInputRef}
+                  style={styles.searchInput}
+                  placeholder="Search Events"
+                  value={searchTerm}
+                  onChangeText={setSearchTerm}
+                />{error ? <Text style={styles.errorText}>{error}</Text> : null}
+              </View>
+            </View> */

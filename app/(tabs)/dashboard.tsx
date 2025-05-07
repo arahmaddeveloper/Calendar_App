@@ -412,6 +412,19 @@ const DashboardScreen: React.FC = () => {
   const getEventColor = (category: string) =>
     categoryColors[category] || "lightgray";
 
+  // useEffect(() => {
+  //   const filtered = events
+  //     .map((group) => ({
+  //       ...group,
+  //       events: group.events.filter((event) =>
+  //         event.title.toLowerCase().includes(searchTerm.toLowerCase())
+  //       ),
+  //     }))
+  //     .filter((group) => group.events.length > 0);
+
+  //   setFilteredEvents(filtered);
+  // }, [searchTerm, events]);
+
   useEffect(() => {
     const filtered = events
       .map((group) => ({
@@ -660,44 +673,6 @@ const DashboardScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* <View style={[styles.header, { paddingTop: insets.top }]}>
-        <TouchableOpacity
-          onPress={handlePrevMonth}
-          style={[styles.monthButton, { backgroundColor: "#0056b3" }]}
-        >
-          <Icon
-            name="chevron-left"
-            type="font-awesome"
-            color="#FFF"
-            size={20}
-          />
-        </TouchableOpacity>
-        <Text h4 style={styles.monthTitle}>{`${getMonthName(
-          currentDate
-        )} ${getYear(currentDate)}`}</Text>
-
-        <View style={styles.searchBarContainer}>
-          <TouchableOpacity
-            onPress={handleNextMonth}
-            style={[styles.monthButton, { backgroundColor: "#0056b3" }]}
-          >
-            <Icon
-              name="chevron-right"
-              type="font-awesome"
-              color="#FFF"
-              size={20}
-            />
-          </TouchableOpacity>
-          <Icon name="search" type="Feather" color="#FFF" size={20} />
-          <TextInput
-            ref={searchInputRef}
-            style={styles.searchInput}
-            placeholder="Search Events"
-            value={searchTerm}
-            onChangeText={setSearchTerm}
-          />{error ? <Text style={styles.errorText}>{error}</Text> : null}
-        </View>
-      </View> */}
       <View style={[styles.calendarHeaderWrapper, { paddingTop: insets.top }]}>
         {/* Left Navigation */}
         <TouchableOpacity
@@ -740,7 +715,20 @@ const DashboardScreen: React.FC = () => {
               placeholderTextColor="#999"
               value={searchTerm}
               onChangeText={setSearchTerm}
+              // if alphabet cross the 8 spelling then disable typing
+              maxLength={12}
             />
+            {/* show events based on search term */}
+            {searchTerm.length > 0 && (
+              <TouchableOpacity
+                onPress={() => {
+                  setSearchTerm("");
+                }}
+                style={styles.clearButton}
+              >
+                <Icon name="x" type="feather" color="#666" size={18} />
+              </TouchableOpacity>
+            )}
           </View>
 
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -1226,5 +1214,11 @@ const styles = StyleSheet.create({
   eventDescription: {
     fontSize: 13,
     color: "#668878",
+  },
+  clearButton: {
+    position: "absolute",
+    right: 10,
+    top: 10,
+    zIndex: 1,
   },
 });
