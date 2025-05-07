@@ -450,7 +450,19 @@ const DashboardScreen: React.FC = () => {
     const events = getEventsForDate(selectedDate);
 
     return (
-      <View>
+      <View
+        style={{
+          width: "100%",
+          padding: 10,
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => setSelectedDate(null)}
+          style={styles.crossButton}
+        >
+          <Text style={styles.crossButtonText}>✖️ Back</Text>
+        </TouchableOpacity>
+
         <ScrollView contentContainerStyle={styles.scheduleScroll}>
           {Array.from({ length: 24 }, (_, i) => i).map((hour) => {
             const eventsAtHour = events.filter((event) => event.hour === hour);
@@ -472,7 +484,7 @@ const DashboardScreen: React.FC = () => {
                 >
                   <Text style={styles.hourLabel}>{formatHour12(hour)}</Text>
 
-                  <View style={styles.eventsContainer}>
+                  {/* <View style={styles.eventsContainer}>
                     {eventsAtHour.map((event, idx) => (
                       <View
                         key={idx}
@@ -483,6 +495,22 @@ const DashboardScreen: React.FC = () => {
                       >
                         <Text style={styles.eventText}>
                           {event.title}: {event.description}
+                        </Text>
+                      </View>
+                    ))}
+                  </View> */}
+                  <View style={styles.eventsContainer}>
+                    {eventsAtHour.map((event, idx) => (
+                      <View
+                        key={idx}
+                        style={[
+                          styles.eventCard,
+                          { backgroundColor: getEventColor(event.category) },
+                        ]}
+                      >
+                        <Text style={styles.eventTitle}>{event.title}</Text>
+                        <Text style={styles.eventDescription}>
+                          {event.description}
                         </Text>
                       </View>
                     ))}
@@ -990,25 +1018,10 @@ const styles = StyleSheet.create({
     color: "#333",
     width: 60,
   },
-  eventsContainer: {
-    flex: 1,
-    maxHeight: 50, // 👈 prevent overflow
-    overflow: "hidden",
-  },
-  eventCard: {
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 6,
-    marginBottom: 4,
-  },
   eventText: {
     fontSize: 12,
-    color: "#fff",
+    color: "#000",
+    fontWeight: "500",
     flexShrink: 1,
     flexWrap: "wrap",
   },
@@ -1159,5 +1172,59 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "#007AFF",
+  },
+  crossButton: {
+    position: "absolute",
+    top: 20,
+    right: 20,
+    backgroundColor: "#ff4d4d",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 50,
+    zIndex: 999,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+
+  crossButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 14,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+
+  eventsContainer: {
+    flexDirection: "column",
+    gap: 8,
+    marginTop: 8,
+    width: "100%",
+  },
+
+  eventCard: {
+    borderRadius: 12,
+    padding: 12,
+    shadowColor: "#343423",
+    elevation: 0.5,
+    shadowOffset: { width: 0, height: 1 },
+    width: 220,
+  },
+
+  eventTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#668878",
+    marginBottom: 4,
+    textTransform: "capitalize",
+    padding: 2,
+    borderRadius: 8,
+  },
+
+  eventDescription: {
+    fontSize: 13,
+    color: "#668878",
   },
 });
