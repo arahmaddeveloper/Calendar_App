@@ -1,4 +1,4 @@
-package com.anonymous.myexpoapp
+package com.arahmadraza.Assistant
 
 import android.app.Application
 import android.content.res.Configuration

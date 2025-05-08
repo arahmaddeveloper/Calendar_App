@@ -88,7 +88,7 @@ android {
 
     namespace 'com.anonymous.myexpoapp'
     defaultConfig {
-        applicationId 'com.anonymous.myexpoapp'
+        applicationId 'com.arahmadraza.Assistant'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

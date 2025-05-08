@@ -20,6 +20,7 @@ import * as Notifications from "expo-notifications";
 import { Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, Button, Icon } from "react-native-elements";
+import { AdMobBanner } from 'expo-ads-admob';
 const { width } = Dimensions.get("window");
 const cellSize = width / 7 - 8;
 
@@ -108,6 +109,8 @@ const DashboardScreen: React.FC = () => {
     }
     return true;
   };
+
+
 
   const scheduleNotification = async (
     event: Event,
@@ -469,6 +472,7 @@ const DashboardScreen: React.FC = () => {
           padding: 10,
         }}
       >
+
         <TouchableOpacity
           onPress={() => setSelectedDate(null)}
           style={styles.crossButton}

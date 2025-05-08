@@ -1,9 +1,9 @@
 {
   "name": "myexpoapp",
   "main": "expo-router/entry",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "scripts": {
-    "start": "expo start",
+    "start": "expo start --dev-client",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
@@ -23,8 +23,10 @@
     "@react-navigation/native": "^7.0.14",
     "date-fns": "^4.1.0",
     "expo": "~52.0.46",
+    "expo-ads-admob": "^13.0.0",
     "expo-blur": "~14.0.3",
     "expo-constants": "~17.0.8",
+    "expo-dev-client": "~5.0.20",
     "expo-font": "~13.0.4",
     "expo-haptics": "~14.0.1",
     "expo-linking": "~7.0.5",

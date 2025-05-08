@@ -1,4 +1,4 @@
-package com.anonymous.myexpoapp
+package com.arahmadraza.Assistant
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

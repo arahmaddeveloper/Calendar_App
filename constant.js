@@ -1,4 +1,8 @@
- /* <Modal visible={isAddEventModalVisible} animationType="slide">
+
+
+
+
+/* <Modal visible={isAddEventModalVisible} animationType="slide">
         <View style={styles.modalContainer}>
           <Text>Event Title:</Text>
           <TextInput
