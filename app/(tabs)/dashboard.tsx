@@ -19,8 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
 import { Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Text, Button, Icon } from "react-native-elements";
-import { AdMobBanner } from 'expo-ads-admob';
+import { Text, Icon } from "react-native-elements";
 const { width } = Dimensions.get("window");
 const cellSize = width / 7 - 8;
 
