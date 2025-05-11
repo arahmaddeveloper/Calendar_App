@@ -34,12 +34,6 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ],
-      [
-        "expo-ads-admob",
-        {
-          "androidAdMobAppId": "ca-app-pub-3940256099942544~3347511713"
-        }
       ]
     ],
     "experiments": {
@@ -53,5 +47,8 @@
         "projectId": "3234c3d6-cd23-412b-a2b1-2a8d5694b5d4"
       }
     }
+  },
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-3940256099942544~3347511713"
   }
 }

@@ -86,7 +86,7 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.anonymous.myexpoapp'
+    namespace 'com.arahmadraza.Assistant'
     defaultConfig {
         applicationId 'com.arahmadraza.Assistant'
         minSdkVersion rootProject.ext.minSdkVersion
