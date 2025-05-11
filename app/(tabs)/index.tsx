@@ -1,79 +1,47 @@
-
 import React, { useEffect } from 'react';
-// import { View, Button } from 'react-native';
 import {
   AdMobBanner,
   AdMobInterstitial,
   setTestDeviceIDAsync,
 } from 'expo-ads-admob';
-
-// export default function HomeScreen() {
-//   useEffect(() => {
-//     const initAds = async () => {
-//       await setTestDeviceIDAsync('EMULATOR'); // 'EMULATOR' tells AdMob it's test mode
-
-//       await AdMobInterstitial.setAdUnitID(
-//         'ca-app-pub-3940256099942544/1033173712' // TEST interstitial ad
-//       );
-//       await AdMobInterstitial.requestAdAsync({ servePersonalizedAds: true });
-//     };
-
-//     initAds();
-//   }, []);
-
-//   const showInterstitial = async () => {
-//     await AdMobInterstitial.showAdAsync();
-//   };
-
-//   return (
-//     <View style={{ flex: 1, justifyContent: 'center' }}>
-//       <Button title="Show Interstitial Ad" onPress={showInterstitial} />
-//       <AdMobBanner
-//         bannerSize="fullBanner"
-//         adUnitID="ca-app-pub-3940256099942544/6300978111" // TEST banner ad
-//         servePersonalizedAds
-//         onDidFailToReceiveAdWithError={(error) => console.warn(error)}
-//       />
-//     </View>
-//   );
-// }
-
-
-import { View, Text } from "react-native";
+import { View, Text } from 'react-native';
 
 function HomeScreen() {
-   useEffect(() => {
+  useEffect(() => {
     const initAds = async () => {
-      await setTestDeviceIDAsync('EMULATOR'); // 'EMULATOR' tells AdMob it's test mode
+      try {
+        await setTestDeviceIDAsync('EMULATOR'); // Test mode on emulator
 
-      await AdMobInterstitial.setAdUnitID(
-        'ca-app-pub-3940256099942544/1033173712' // TEST interstitial ad
-      );
-      await AdMobInterstitial.requestAdAsync({ servePersonalizedAds: true });
+        await AdMobInterstitial.setAdUnitID('ca-app-pub-3940256099942544/1033173712'); // Test Interstitial
+        await AdMobInterstitial.requestAdAsync({ servePersonalizedAds: true });
+        await AdMobInterstitial.showAdAsync(); // <-- Don't forget this!
+      } catch (err) {
+        console.warn('AdMob init error:', err);
+      }
     };
 
     initAds();
   }, []);
+
   return (
     <View
-    style={{
-      width: "100%",
-      height: "100%",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      backgroundColor: "yellowgreen"
-    }}
+      style={{
+        width: '100%',
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'yellowgreen',
+      }}
     >
       <Text>Home</Text>
-       <AdMobBanner
+      <AdMobBanner
         bannerSize="fullBanner"
-        adUnitID="ca-app-pub-3940256099942544/6300978111" // TEST banner ad
+        adUnitID="ca-app-pub-3940256099942544/6300978111" // Test Banner
         servePersonalizedAds
-        onDidFailToReceiveAdWithError={(error) => console.warn(error)}
+        onDidFailToReceiveAdWithError={(error) => console.warn('Banner ad error:', error)}
       />
     </View>
   );
 }
 
-export default HomeScreen
+export default HomeScreen;
