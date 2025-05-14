@@ -34,12 +34,12 @@ function HomeScreen() {
       }}
     >
       <Text>Home</Text>
-      <AdMobBanner
+      {/* <AdMobBanner
         bannerSize="fullBanner"
         adUnitID="ca-app-pub-3940256099942544/6300978111" // Test Banner
         servePersonalizedAds
         onDidFailToReceiveAdWithError={(error) => console.warn('Banner ad error:', error)}
-      />
+      /> */}
     </View>
   );
 }
